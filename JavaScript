@@ -1,0 +1,328 @@
+/* Author: Kevin L. Spohn */
+
+
+//declare variables
+//create snake, speed, and direction objects and attributes
+var snake = new Object;
+	snake['size'];
+	snake['position'];
+    snake['direction'];
+	snake['dead'];
+
+var speed = new Object;
+	speed['slow'] = 100;
+	speed['medium'] = 75;
+	speed['fast'] = 50;
+	speed['super'] = 40;
+	speed['dontDoIt'] = 25;
+	snake['speed'];
+
+var direction = new Object;
+	direction['up'] = [0,-10];
+	direction['down'] = [0,10];
+	direction['left'] = [-10,0];
+	direction['right'] = [10,0];
+    
+ 
+//tail, counter variables and snakeFood (fruits) object/function
+var tail;
+var counter;
+var snakeFood = new Object;
+	snakeFood['position'];
+	snakeFood['type'];
+
+snakeFood['draw'] = function(context) {
+    var image = new Image();
+	image.src = 'img/' + snakeFood['type']+ ".png";
+	context.drawImage(image,snakeFood['position'][0],snakeFood['position'][1]);
+};
+    snakeFood['cherry'] = 50;
+	snakeFood['apple'] = 10;
+	snakeFood['grape'] = 5;
+	snakeFood['banana'] = 2;
+	snakeFood['onion'] = 1;
+
+//scores recorded and displayed
+var highScores = new Array();
+var localStorage = storageSupport();
+			
+// preload images into new Array
+if (document.images){
+				
+    var img = new Array();
+		img[0] = new Image();
+		img[0].src = 'img/apple.png';
+		img[1] = new Image();
+		img[1].src = 'img/banana.png';
+		img[2] = new Image();
+		img[2].src = 'img/cherry.png';
+		img[3] = new Image();
+		img[3].src = 'img/grape.png';
+		img[4] = new Image();
+		img[4].src = 'img/headdown.png';
+		img[5] = new Image();
+		img[5].src = 'img/headleft.png';
+		img[6] = new Image();
+		img[6].src = 'img/headright.png';
+		img[7] = new Image();
+		img[7].src = 'img/headup.png';
+		img[8] = new Image();
+		img[8].src = 'img/leftbottom.png';
+		img[9] = new Image();
+		img[9].src = 'img/lefttop.png';
+		img[10] = new Image();
+		img[10].src = 'onion.png';
+		img[11] = new Image();
+		img[11].src = 'img/rightbottom.png';
+		img[12] = new Image();
+		img[12].src = 'img/righttop.png';
+		img[13] = new Image();
+		img[13].src = 'img/tailendbottom.xcf';
+		img[14] = new Image();
+		img[14].src = 'img/tailendleft.png';
+		img[15] = new Image();
+		img[15].src = 'img/tailendright.png';
+		img[16] = new Image();
+		img[16].src = 'img/tailendtop.png';
+		img[17] = new Image();
+		img[17].src = 'img/tailmiddle.png';
+		img[18] = new Image();
+		img[18].src = 'img/tailmiddlehorizontal.png';
+}
+			
+function setup(){
+				
+    for(var i = 0;i<localStorage.length;i++){
+		highScores[i] = localStorage[i];
+		}
+        displayScores();
+}
+
+function storageSupport(){
+	try {
+        return 'localStorage' in window && window['localStorage'] !== null;
+		} catch (e){
+                return false;
+		}
+}
+			
+function submit(){
+	
+    highScores[highScores.length] = counter;
+	highScores.sort(function (one, other){
+        return other - one;
+		});
+}
+
+function scoreVerify(){
+				
+    if(highScores.length < 5){
+		submit();
+	}else{
+		submit();
+		highScores.pop();
+    }
+}
+
+function displayScores(){
+				
+    for(var i = 0;i < highScores.length;i++){
+		console.log("score" + (i + 1));
+		document.getElementById("score"+ (i+1)).innerHTML = highScores[i];
+		if(localStorage){
+			localStorage[i] = highScores[i];
+		}
+    }
+}
+
+function count(){
+	
+    counter += (3000 / (speed[snake['speed']]))*(snakeFood[snakeFood['type']]);
+	document.getElementById("counter").innerHTML = counter;
+}
+
+function addTail(){
+	tail[tail.length] = [-100,100];
+}
+
+function animateSnake(){
+    
+    for(var i = tail.length-1;i > 0;i--){
+		tail[i] = tail[i-1];
+    }
+    tail[0] = snake['position'].slice(0);				
+	snake['position'][0] += direction[snake['direction']][0];
+	snake['position'][1] += direction[snake['direction']][1];
+}
+		
+function collideHandling(){
+				
+    if( snake['position'][0] < 0 || 
+		snake['position'][0] > 400-snake['size'] || 
+		snake['position'][1] < 0 || 
+		snake['position'][1] > 400-snake['size']){		
+            snake['dead'] = true;
+		}
+		if(snakeFood['position'][0] == snake['position'][0] && snakeFood['position'][1] == snake['position'][1]){	
+			addTail();
+			count();
+			createSnakeFood();
+            }
+			for(var i in tail){
+				if(snake['position'][0] == tail[i][0] && snake['position'][1] == tail[i][1]){
+					snake['dead'] = true;
+				}
+			}
+}
+			
+function positionVerify(pos){
+				
+    if(pos === snake['position']){
+		return false;
+	}
+	for(var i = 0;i < tail.length;i++){
+		if(pos === tail){
+			return false;
+    		}
+    	}return true;
+}
+
+function createSnakeFood(){
+				
+    var pos = [Math.floor(Math.random()*40), Math.floor(Math.random()*40)];
+	
+    while(!positionVerify(pos)){
+		pos = [Math.floor(Math.random()*40), Math.floor(Math.random()*40)];
+		}
+	
+    snakeFood['position'] = new Array(pos[0]*10, pos[1]*10);
+	var num = Math.floor(Math.random()*50+1);
+		if(num % snakeFood['cherry'] == 0){
+			snakeFood['type'] = 'cherry';
+			}else if(num % snakeFood['apple'] == 0){
+				snakeFood['type'] = 'apple';
+				}else if(num % snakeFood['grape'] == 0){
+					snakeFood['type'] = 'grape';
+                    }else if(num % snakeFood['banana'] == 0){
+                        snakeFood['type'] = 'banana';
+                        }else{
+                            snakeFood['type'] = 'onion';
+                            }
+}
+
+function keyListener(arrowKeys){
+	if(!snake['dead']){
+		if(!arrowKeys){
+			arrowKeys = window.event;
+            }
+		if(arrowKeys.keyCode == 38 && (snake['direction'] == 'left' || snake['direction'] == 'right')){
+			snake['direction'] = 'up';
+			}else if(arrowKeys.keyCode == 40 && (snake['direction'] == 'left' || snake['direction'] == 'right')){
+				snake['direction'] = 'down';
+                }else if(arrowKeys.keyCode == 37 && (snake['direction'] == 'up' || snake['direction'] == 'down')){
+					snake['direction'] = 'left';
+					}else if(arrowKeys.keyCode == 39 && (snake['direction'] == 'up' || snake['direction'] == 'down')){
+						snake['direction'] = 'right';
+                        }
+    }
+}
+			
+function snakeSegment(prev,block,next){
+	
+    if (prev[1] == block[1] && block[1] == next[1]){
+		return "img/tailmiddlehorizontal.png";
+        }else if (prev[0] == block[0] && block[0] == next[0]){
+			return "img/tailmiddle.png";
+            }
+	if (prev[0] == block[0]){
+		if (prev[1] > block[1]){
+			var topbottom = "bottom";
+			}else if (prev[1] < block[1]){
+				var topbottom = "top";
+                }
+    if (next[0] > block[0]){
+		var leftright = "right";
+        }else if (next[0] < block[0]){
+            var leftright = "left";
+            }
+        }else if (prev[1] == block[1]){
+	if (prev[0] > block[0]){
+		var leftright = "right";
+		}else if (prev[0] < block[0]){
+			var leftright = "left";
+			}
+	if (next[1] > block[1]){
+		var topbottom = "bottom";
+		}else if (next[1] < block[1]){
+			var topbottom = "top";
+			}
+		}return leftright + topbottom + ".png";
+}
+			
+function draw(){
+				
+    var canvas = document.getElementById("screen");
+	var context = canvas.getContext("2d");
+	context.clearRect(0,0,400,400);
+    var image = new Image();
+	image.src = "img/head" + snake['direction'] + ".png";
+	context.drawImage(image,snake['position'][0],snake['position'][1]);
+			
+    for (var i = 0;i < tail.length-1;i++){
+		var image = new Image();
+			if (i == 0){
+				image.src = snakeSegment(snake['position'],tail[0],tail[1]);
+				}else {
+                    image.src = snakeSegment(tail[i-1],tail[i],tail[i+1]);
+					}
+		context.drawImage(image,tail[i][0],tail[i][1]);
+    }
+	var image = new Image();
+		if (tail[tail.length-2][0] == tail[tail.length-1][0] && tail[tail.length-2][1] > tail[tail.length-1][1]){
+			image.src = "img/tailendbottom.png";
+			}else if (tail[tail.length-2][0] == tail[tail.length-1][0] && tail[tail.length-2][1] < tail[tail.length-1][1]){
+				image.src = "img/tailendtop.png";
+				}else if (tail[tail.length-2][0] > tail[tail.length-1][0] && tail[tail.length-2][1] == tail[tail.length-1][1]){
+					image.src = "img/tailendright.png";
+				}else if (tail[tail.length-2][0] < tail[tail.length-1][0] && tail[tail.length-2][1] == tail[tail.length-1][1]){
+					image.src = "img/tailendleft.png";
+                    }
+			context.drawImage(image,tail[tail.length-1][0],tail[tail.length-1][1]);
+			snakeFood['draw'](context);
+}
+
+function stepIn(){
+	animateSnake();
+	collideHandling();
+	draw();
+	if(snake['dead']){
+		document.getElementById("result").innerHTML = "You Died!";
+		document.getElementById("button").style.visibility = 'visible';
+		scoreVerify();
+		displayScores();
+        }else{
+			stepWait();
+			}
+
+    }
+
+function stepWait(){
+	setTimeout('stepIn()',speed[snake['speed']]);
+    }
+			
+function game(){
+	snake['size'] = 10;
+	snake['position'] = [40,10];
+	snake['speed'] = document.getElementById("speed").value;
+	snake['direction'] = 'right';
+	snake['dead'] = false;
+	counter = 0;
+	tail = new Array(new Array(30,10),new Array(20,10),new Array(10,10),new Array(0,10));
+	document.getElementById("button").style.visibility = 'hidden';
+	document.getElementById("result").innerHTML = "";
+	document.onkeydown = keyListener;
+	document.getElementById("counter").innerHTML = counter;
+	createSnakeFood();
+	draw();
+	stepWait();
+}
